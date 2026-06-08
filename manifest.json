@@ -1,0 +1,20 @@
+{
+  "name": "רבקה אסידון | ניהול תורים",
+  "short_name": "רבקה 💄",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#FAF7F4",
+  "theme_color": "#A88070",
+  "lang": "he",
+  "dir": "rtl",
+  "orientation": "portrait",
+  "description": "ניהול תורים ומעקב הכנסות — רבקה אסידון מאפרת",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

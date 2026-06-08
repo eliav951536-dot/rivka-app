@@ -175,6 +175,26 @@
     .svc-name{font-size:13px;font-weight:600;color:var(--text-dark)}
     .svc-price{font-size:11px;color:var(--text-light);margin-top:2px}
 
+    /* ── CONTACT PICKER BUTTON ── */
+    .btn-contact-pick{
+      width:100%;padding:13px 16px;
+      background:var(--gold-light);border:1.5px solid var(--gold);
+      border-radius:var(--r-sm);
+      font-family:'Heebo',sans-serif;font-size:14px;font-weight:600;
+      color:var(--text-dark);cursor:pointer;
+      display:flex;align-items:center;justify-content:center;gap:8px;
+      transition:background .15s;
+    }
+    .btn-contact-pick:active{background:var(--gold);color:white}
+    .btn-phone-ico{
+      flex-shrink:0;width:46px;height:46px;
+      border:1.5px solid var(--border);border-radius:var(--r-sm);
+      background:var(--white);cursor:pointer;
+      display:flex;align-items:center;justify-content:center;
+      font-size:20px;transition:background .15s;
+    }
+    .btn-phone-ico:active{background:var(--primary-light)}
+
     /* ── BUTTONS ── */
     .btn{
       width:100%;padding:15px;
@@ -390,6 +410,17 @@
   <div class="form-wrap">
     <input type="hidden" id="edit-id">
 
+    <!-- Contact picker button — shown only when API is supported -->
+    <div id="contact-picker-wrap" style="display:none;margin-bottom:16px">
+      <button type="button" class="btn-contact-pick" id="btn-pick-contact" onclick="pickContact()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
+        בחר מאנשי קשר
+      </button>
+    </div>
+
     <div class="fg">
       <label class="fl">שם הלקוחה *</label>
       <input type="text" class="fi" id="i-name" placeholder="שם פרטי ושם משפחה">
@@ -397,7 +428,12 @@
 
     <div class="fg">
       <label class="fl">מספר פלאפון</label>
-      <input type="tel" class="fi" id="i-phone" placeholder="05X-XXXXXXX" dir="ltr" inputmode="tel">
+      <div style="display:flex;gap:8px;align-items:center">
+        <input type="tel" class="fi" id="i-phone" placeholder="05X-XXXXXXX" dir="ltr" inputmode="tel" style="flex:1">
+        <button type="button" id="btn-pick-phone" style="display:none" onclick="pickContact()" title="בחר מאנשי קשר" class="btn-phone-ico">
+          👤
+        </button>
+      </div>
     </div>
 
     <div class="fg">
@@ -995,8 +1031,54 @@ function toast(msg) {
 }
 
 /* ══════════════════════════════════════════════════
+   CONTACT PICKER API
+══════════════════════════════════════════════════ */
+const contactsSupported = ('contacts' in navigator && 'ContactsManager' in window);
+
+function initContactUI() {
+  if (!contactsSupported) return;
+  // Show the big banner button and the small phone icon button
+  document.getElementById('contact-picker-wrap').style.display = 'block';
+  document.getElementById('btn-pick-phone').style.display      = 'flex';
+}
+
+async function pickContact() {
+  if (!contactsSupported) {
+    toast('אנשי קשר לא נתמכים בדפדפן זה');
+    return;
+  }
+  try {
+    const props   = ['name', 'tel'];
+    const opts    = { multiple: false };
+    const results = await navigator.contacts.select(props, opts);
+    if (!results || results.length === 0) return;
+
+    const contact = results[0];
+
+    // Fill name — prefer full name
+    if (contact.name && contact.name.length > 0) {
+      const nameField = document.getElementById('i-name');
+      if (!nameField.value) nameField.value = contact.name[0];
+    }
+
+    // Fill phone — take first number, clean it
+    if (contact.tel && contact.tel.length > 0) {
+      const raw     = contact.tel[0];
+      const cleaned = raw.replace(/\s|-/g, '');           // strip spaces/dashes
+      const local   = cleaned.replace(/^\+972/, '0');      // +972XX → 0XX
+      document.getElementById('i-phone').value = local;
+    }
+
+    toast('פרטי הקשר הועתקו ✓');
+  } catch (err) {
+    if (err.name !== 'AbortError') toast('לא הצלחנו לגשת לאנשי הקשר');
+  }
+}
+
+/* ══════════════════════════════════════════════════
    INIT
 ══════════════════════════════════════════════════ */
+initContactUI();
 go('home');
 </script>
 </body>
